@@ -1,9 +1,11 @@
 import pygame
-
+from pytmx.util_pygame import load_pygame
 pygame.init()
 
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 400
+
+
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -18,7 +20,8 @@ GRAVITY = 0.6
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Platformer")
-
+tmx_data = load_pygame('resources/pygame01_map.tmx')
+print(tmx_data.layers)
 clock = pygame.time.Clock()
 
 class Player(pygame.sprite.Sprite):
