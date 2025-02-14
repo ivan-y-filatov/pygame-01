@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.1" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="2" nextobjectid="1">
  <editorsettings>
-  <export target="pygame02_map.tmx" format="tmx"/>
+  <export target="pygame03_map.tmx" format="tmx"/>
  </editorsettings>
  <tileset firstgid="1" source="../../super-mario/resources/Tile_map1.tsx"/>
  <tileset firstgid="3" source="3 blocks.tsx"/>
