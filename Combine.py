@@ -3,6 +3,7 @@ import pygame
 from pytmx.util_pygame import load_pygame
 
 lives_left = 3
+coin_bank = 0
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, pos, surf, groups):
@@ -16,8 +17,14 @@ class Enemy(pygame.sprite.Sprite):
         self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/enemy.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=pos)
 
+class Coin(pygame.sprite.Sprite):
+    def __init__(self, pos, groups):
+        super().__init__(groups)
+        self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/KFC.png').convert_alpha()
+        self.rect = self.image.get_rect(topleft=pos)
+
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, obstacles, enemies):
+    def __init__(self, pos, groups, obstacles, enemies, buskets):
         super().__init__(groups)
         self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/player.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=pos)
@@ -25,6 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.vel = pygame.math.Vector2(0, 0)
         self.obstacles = obstacles
         self.enemies = enemies
+        self.coins = buskets
         self.gravity = 0.5
         self.jump_strength = -9
         self.speed = 5
@@ -83,11 +91,17 @@ class Player(pygame.sprite.Sprite):
             self.rect.topleft = reset_pos
             self.vel = pygame.math.Vector2(0, 0)
 
+    def coin_checker(self):
+        global coin_bank
+        collected_coins = pygame.sprite.spritecollide(self, self.coins, True)
+        coin_bank += len(collected_coins)
+
     def update(self, reset_pos):
         self.apply_gravity()
         self.handle_input()
         self.move()
         self.lives_checker(reset_pos)
+        self.coin_checker()
 
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
@@ -98,6 +112,7 @@ tmx_data = load_pygame('resources/pygame03_map.tmx')
 all_sprites = pygame.sprite.Group()
 obstacles = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
+buskets = pygame.sprite.Group()
 
 for layer in tmx_data.visible_layers:
     if hasattr(layer, 'data'):
@@ -111,11 +126,15 @@ for obj in tmx_data.objects:
         Tile(pos=pos, surf=obj.image, groups=[all_sprites])
 
 player_start_pos = (100, 100)
-player = Player(pos=player_start_pos, groups=all_sprites, obstacles=obstacles, enemies=enemies)
+player = Player(pos=player_start_pos, groups=all_sprites, obstacles=obstacles, enemies=enemies, buskets=buskets)
 
 enemy_positions = [(200, 550), (600, 260), (750, 325)]
 for pos in enemy_positions:
     Enemy(pos=pos, groups=[all_sprites, enemies])
+
+coin_positions = [(200, 500), (600, 170), (750,200)]
+for pos in coin_positions:
+    Coin(pos=pos, groups=[all_sprites, buskets])
 
 font = pygame.font.Font(None, 36)
 
@@ -126,6 +145,7 @@ while True:
             sys.exit()
 
     all_sprites.update(player_start_pos)
+
     if lives_left <= 0:
         print("Game Over!")
         pygame.quit()
@@ -135,7 +155,9 @@ while True:
     all_sprites.draw(screen)
 
     lives_text = font.render(f'Lives: {lives_left}', True, (0, 0, 0))
+    coin_text = font.render(f'Buskets: {coin_bank}', True, (0, 0, 0))
     screen.blit(lives_text, (10, 10))
+    screen.blit(coin_text, (10, 40))
 
     pygame.display.update()
     clock.tick(60)
