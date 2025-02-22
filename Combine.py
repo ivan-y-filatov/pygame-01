@@ -24,15 +24,16 @@ class Coin(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, obstacles, enemies, buskets):
+    def __init__(self, pos, groups, obstacles, enemies, coins):
         super().__init__(groups)
         self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/player.png').convert_alpha()
+        self.sprites = []
         self.rect = self.image.get_rect(topleft=pos)
         self.pos = pygame.math.Vector2(pos)
         self.vel = pygame.math.Vector2(0, 0)
         self.obstacles = obstacles
         self.enemies = enemies
-        self.coins = buskets
+        self.coins = coins
         self.gravity = 0.5
         self.jump_strength = -9
         self.speed = 5
@@ -48,7 +49,7 @@ class Player(pygame.sprite.Sprite):
             self.vel.x = self.speed
         else:
             self.vel.x = 0
-        if keys[pygame.K_SPACE] and self.on_ground():
+        if keys[pygame.K_UP] and self.on_ground():
             self.vel.y = self.jump_strength
 
     def on_ground(self):
@@ -61,13 +62,13 @@ class Player(pygame.sprite.Sprite):
         self.pos.x += self.vel.x
         self.rect.x = int(self.pos.x)
         self.handle_collisions('horizontal')
+
         self.pos.y += self.vel.y
         self.rect.y = int(self.pos.y)
         self.handle_collisions('vertical')
 
     def handle_collisions(self, direction):
-        collisions = pygame.sprite.spritecollide(self, self.obstacles, False)
-        for sprite in collisions:
+        for sprite in pygame.sprite.spritecollide(self, self.obstacles, False):
             if direction == 'horizontal':
                 if self.vel.x > 0:
                     self.rect.right = sprite.rect.left
@@ -85,7 +86,7 @@ class Player(pygame.sprite.Sprite):
 
     def lives_checker(self, reset_pos):
         global lives_left
-        if self.rect.top > 720 or pygame.sprite.spritecollideany(self, self.enemies):
+        if self.rect.top > 900 or pygame.sprite.spritecollideany(self, self.enemies):
             lives_left -= 1
             self.pos = pygame.math.Vector2(reset_pos)
             self.rect.topleft = reset_pos
@@ -93,8 +94,8 @@ class Player(pygame.sprite.Sprite):
 
     def coin_checker(self):
         global coin_bank
-        collected_coins = pygame.sprite.spritecollide(self, self.coins, True)
-        coin_bank += len(collected_coins)
+        collected = pygame.sprite.spritecollide(self, self.coins, True)
+        coin_bank += len(collected)
 
     def update(self, reset_pos):
         self.apply_gravity()
@@ -103,38 +104,39 @@ class Player(pygame.sprite.Sprite):
         self.lives_checker(reset_pos)
         self.coin_checker()
 
+def camera_offset(player, width, height):
+    offset_x = -(player.rect.centerx - width // 2)
+    offset_y = -(player.rect.centery - height // 2)
+    return offset_x, offset_y
+
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-tmx_data = load_pygame('resources/pygame03_map.tmx')
+tmx_data = load_pygame('resources/test.tmx')
 
 all_sprites = pygame.sprite.Group()
 obstacles = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
-buskets = pygame.sprite.Group()
+coins = pygame.sprite.Group()
 
 for layer in tmx_data.visible_layers:
     if hasattr(layer, 'data'):
         for x, y, surf in layer.tiles():
-            pos = (x * 32, y * 32)
-            Tile(pos=pos, surf=surf, groups=[all_sprites, obstacles])
+            Tile((x * 32, y * 32), surf, [all_sprites, obstacles])
 
 for obj in tmx_data.objects:
-    pos = obj.x, obj.y
     if obj.image:
-        Tile(pos=pos, surf=obj.image, groups=[all_sprites])
+        Tile((obj.x, obj.y), obj.image, [all_sprites])
 
 player_start_pos = (100, 100)
-player = Player(pos=player_start_pos, groups=all_sprites, obstacles=obstacles, enemies=enemies, buskets=buskets)
+player = Player(player_start_pos, all_sprites, obstacles, enemies, coins)
 
-enemy_positions = [(200, 550), (600, 260), (750, 325)]
-for pos in enemy_positions:
-    Enemy(pos=pos, groups=[all_sprites, enemies])
+for pos in [(200, 550), (750, 515), (750, 325)]:
+    Enemy(pos, [all_sprites, enemies])
 
-coin_positions = [(200, 500), (600, 170), (750,200)]
-for pos in coin_positions:
-    Coin(pos=pos, groups=[all_sprites, buskets])
+for pos in [(200, 500), (300, 832), (750, 200)]:
+    Coin(pos, [all_sprites, coins])
 
 font = pygame.font.Font(None, 36)
 
@@ -151,13 +153,18 @@ while True:
         pygame.quit()
         sys.exit()
 
-    screen.fill('White')
-    all_sprites.draw(screen)
+    screen.fill('white')
+    offset_x, offset_y = camera_offset(player, 1280, 720)
 
+    for sprite in all_sprites:
+        screen.blit(sprite.image, (sprite.rect.x + offset_x, sprite.rect.y + offset_y))
+
+    coordinates_text = font.render(f'`Coords: {player.pos}', True, (0,0,0))
     lives_text = font.render(f'Lives: {lives_left}', True, (0, 0, 0))
-    coin_text = font.render(f'Buskets: {coin_bank}', True, (0, 0, 0))
+    coin_text = font.render(f'Coins: {coin_bank}', True, (0, 0, 0))
     screen.blit(lives_text, (10, 10))
     screen.blit(coin_text, (10, 40))
+    screen.blit(coordinates_text, (10, 70))
 
     pygame.display.update()
     clock.tick(60)
