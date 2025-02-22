@@ -26,7 +26,7 @@ class Coin(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, obstacles, enemies, coins):
         super().__init__(groups)
-        self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/player.png').convert_alpha()
+        #self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/player.png').convert_alpha()
         self.sprites = []
         self.rect = self.image.get_rect(topleft=pos)
         self.pos = pygame.math.Vector2(pos)
