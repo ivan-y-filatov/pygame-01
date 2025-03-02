@@ -1,9 +1,13 @@
 import sys
+from typing import Union
+
 import pygame
+from pygame import Surface, SurfaceType
 from pytmx.util_pygame import load_pygame
 
 lives_left = 3
 coin_bank = 0
+
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, pos, surf, groups):
@@ -11,11 +15,13 @@ class Tile(pygame.sprite.Sprite):
         self.image = surf
         self.rect = self.image.get_rect(topleft=pos)
 
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos, groups):
         super().__init__(groups)
         self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/enemy.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=pos)
+
 
 class Coin(pygame.sprite.Sprite):
     def __init__(self, pos, groups):
@@ -23,10 +29,11 @@ class Coin(pygame.sprite.Sprite):
         self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/KFC.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=pos)
 
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, obstacles, enemies, coins):
         super().__init__(groups)
-        #self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/player.png').convert_alpha()
+        self.image = pygame.image.load('/Users/ivan/PycharmProjects/super-mario/resources/player.png').convert_alpha()
         self.sprites = []
         self.rect = self.image.get_rect(topleft=pos)
         self.pos = pygame.math.Vector2(pos)
@@ -104,16 +111,18 @@ class Player(pygame.sprite.Sprite):
         self.lives_checker(reset_pos)
         self.coin_checker()
 
+
 def camera_offset(player, width, height):
     offset_x = -(player.rect.centerx - width // 2)
     offset_y = -(player.rect.centery - height // 2)
     return offset_x, offset_y
 
+
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-tmx_data = load_pygame('resources/test.tmx')
+tmx_data = load_pygame('resources/new_twxture.tmx')
 
 all_sprites = pygame.sprite.Group()
 obstacles = pygame.sprite.Group()
@@ -132,10 +141,10 @@ for obj in tmx_data.objects:
 player_start_pos = (100, 100)
 player = Player(player_start_pos, all_sprites, obstacles, enemies, coins)
 
-for pos in [(200, 550), (750, 515), (750, 325)]:
+for pos in []:
     Enemy(pos, [all_sprites, enemies])
 
-for pos in [(200, 500), (300, 832), (750, 200)]:
+for pos in []:
     Coin(pos, [all_sprites, coins])
 
 font = pygame.font.Font(None, 36)
@@ -159,7 +168,7 @@ while True:
     for sprite in all_sprites:
         screen.blit(sprite.image, (sprite.rect.x + offset_x, sprite.rect.y + offset_y))
 
-    coordinates_text = font.render(f'`Coords: {player.pos}', True, (0,0,0))
+    coordinates_text = font.render(f'`Coords: {player.pos}', True, (0, 0, 0))
     lives_text = font.render(f'Lives: {lives_left}', True, (0, 0, 0))
     coin_text = font.render(f'Coins: {coin_bank}', True, (0, 0, 0))
     screen.blit(lives_text, (10, 10))
